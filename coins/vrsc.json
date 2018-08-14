@@ -2,7 +2,8 @@
     "name": "verus",
     "symbol": "vrsc",
     "algorithm": "verushash",
-    "txfee": 0.00005,
+    "txfee": 0.0005,
+    "requireShielding": true,
 
     "explorer": {
         "txURL": "https://explorer.veruscoin.io/tx/",
