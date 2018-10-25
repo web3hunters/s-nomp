@@ -3,6 +3,7 @@
     "symbol": "vot",
     "algorithm": "equihash",
     "overwinter": true,
+    "sapling": 245555,
     "requireShielding": true,
     "txfee": 0.0004,
     "peerMagic": "24e92764",
