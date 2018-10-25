@@ -2,6 +2,7 @@
     "name": "verus",
     "symbol": "vrsc",
     "algorithm": "verushash",
+    "sapling": 227520,
     "txfee": 0.0005,
     "requireShielding": true,
     "burnFees": true,
