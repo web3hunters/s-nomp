@@ -128,7 +128,7 @@ module.exports = function(logger){
         }
 
         //Functions required for internal payment processing
-        else{
+        else {
 
             var shareProcessor = new ShareProcessor(logger, poolOptions);
 
@@ -138,7 +138,14 @@ module.exports = function(logger){
                 else {
                         pool.daemon.cmd('validateaddress', [String(workerName).split(".")[0]], function (results) {
                             var isValid = results.filter(function (r) {
-                                return r.response.isvalid
+                                if (r.response)
+                                {
+                                    return r.response.isvalid;
+                                }
+                                else
+                                {
+                                    return false;
+                                }
                             }).length > 0;
                             authCallback(isValid);
                         });
