@@ -2,13 +2,13 @@
     "enabled":false,
     "coin": "vrsc.json",
 
-    "address": "RPURzp19sqQrrkjj2TrUGKTTJk8XX5cjh5",
+    "address": "",
     "_comment_address": "pools VerusCoin address; ex, RLmMZRktNiQuE6bkSWHgJzr4U6dFs9Aqbo",
 
-    "zAddress": "zcd9STrQJant5tfNVJuc3J2gFrMTzBmnEMtXZCwXTman8fxxJec7EVdLx61LZszMgYGmDtDxxcSCdo8rr1g32scf4ioRL1J",
+    "zAddress": "",
     "_comment_zAddress": "Z-Address for VRSC Shielding",
 
-    "tAddress": "RPURzp19sqQrrkjj2TrUGKTTJk8XX5cjh5",
+    "tAddress": "",
     "_comment_tAddress": "Pools Outgoing address",
     
     "rewardRecipients": {
