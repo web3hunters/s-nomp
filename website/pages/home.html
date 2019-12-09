@@ -113,7 +113,7 @@
                 {{ for(var pool in it.stats.pools) { }}
                 <div>
                     <div><i class="fa fa-dot-circle-o"></i>{{=pool}}</div>
-                    <div><i class="fa fa-users"></i><span id="statsMiners{{=pool}}">{{=it.stats.pools[pool].workerCount}}</span> Miners</div>
+                    <div><i class="fa fa-users"></i><span id="statsMiners{{=pool}}">{{=it.stats.pools[pool].workerCount}}</span> Workers</div>
                     <div><i class="fa fa-tachometer"></i><span id="statsHashrate{{=pool}}">{{=it.stats.pools[pool].hashrateString}}</span></div>
                 </div>
                 {{ } }}
