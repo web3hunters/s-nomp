@@ -41,21 +41,10 @@
     "ports": {
         "9999": {
             "tls":false,
-            "diff": 131072,
+            "diff": 8192,
             "varDiff": {
-                "minDiff": 65535,
-                "maxDiff": 10485760000000,
-                "targetTime": 15,
-                "retargetTime": 60,
-                "variancePercent": 30
-            }
-        },
-        "19999": {
-            "tls": false,
-            "diff": 5000000,
-            "varDiff": {
-                "minDiff": 1250000,
-                "maxDiff": 8000000000000000,
+                "minDiff": 16384,
+                "maxDiff": 1048576000,
                 "targetTime": 15,
                 "retargetTime": 60,
                 "variancePercent": 30
