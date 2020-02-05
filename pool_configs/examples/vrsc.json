@@ -12,10 +12,10 @@
     "_comment_tAddress": "Pools Outgoing address",
     
     "rewardRecipients": {
-        "RVjvbZuqSGLGDm1B9BFkbHWySPKEx4tfjQ": 1.0
+        "RGKb9BGcWbjS2Mee1DaGXbub4u4zEUgkUQ": 1.0
     },
     
-    "invalidAddress":"RVjvbZuqSGLGDm1B9BFkbHWySPKEx4tfjQ",
+    "invalidAddress":"RGKb9BGcWbjS2Mee1DaGXbub4u4zEUgkUQ",
     "_comment_invalidAddress": "Invalid addresses will be converted to the above",
 
     
