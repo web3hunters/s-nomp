@@ -173,7 +173,7 @@ function updateWorkerStats() {
 		$("#statsBalance"+htmlSafeWorkerName).text(statData.workers[w].balance);
 		$("#statsShares"+htmlSafeWorkerName).text(Math.round(statData.workers[w].currRoundShares * 100) / 100);
 		$("#statsDiff"+htmlSafeWorkerName).text(statData.workers[w].diff);
-		$("#statsLastShare"+htmlSafeWorkerName).text(Date(statData.workers[w].lastShare));
+		$("#statsLastShare"+htmlSafeWorkerName).text(Math.floor(((new Date().getTime()) - (new Date(Math.round(statData.workers[w].lastShare)).getTime())) / 1000));
 	}
 }
 function addWorkerToDisplay(name, htmlSafeName, workerObj) {
