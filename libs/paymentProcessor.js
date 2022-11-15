@@ -966,7 +966,7 @@ function SetupForPool(logger, poolOptions, setupFinished){
                                                 if (workerTimes[address] != null && parseFloat(workerTimes[address]) > 0) {
                                                     var timePeriod = roundTo(parseFloat(workerTimes[address] || 1) / maxTime , 2);
                                                     if (timePeriod > 0 && timePeriod < pplntTimeQualify) {
-                                                        var lost = shares - (shares * timePeriod);
+                                                        var lost = shares - (shares * timePeriod / pplntTimeQualify);
                                                         sharesLost += lost;
                                                         shares = Math.max(shares - lost, 0);
                                                     }
@@ -1018,7 +1018,7 @@ function SetupForPool(logger, poolOptions, setupFinished){
                                                 if (workerTimes[address] != null && parseFloat(workerTimes[address]) > 0) {
                                                     var timePeriod = roundTo(parseFloat(workerTimes[address] || 1) / maxTime , 2);
                                                     if (timePeriod > 0 && timePeriod < pplntTimeQualify) {
-                                                        var lost = shares - (shares * timePeriod);
+                                                        var lost = shares - (shares * timePeriod / pplntTimeQualify);
                                                         sharesLost += lost;
                                                         shares = Math.max(shares - lost, 0);
                                                         logger.warning(logSystem, logComponent, 'PPLNT: Reduced shares for '+workerAddress+' round:' + round.height + ' maxTime:'+maxTime+'sec timePeriod:'+roundTo(timePeriod,6)+' shares:'+tshares+' lost:'+lost+' new:'+shares);
