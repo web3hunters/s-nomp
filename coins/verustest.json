@@ -6,6 +6,7 @@
     "txfee": 0.0005,
     "requireShielding": true,
     "burnFees": true,
+    "pbaasActivationHeight": 1,
 
     "explorer": {
         "txURL": "https://explorer.veruscoin.io/tx/",
