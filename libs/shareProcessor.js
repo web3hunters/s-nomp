@@ -72,7 +72,11 @@ module.exports = function(logger, poolConfig){
 
         if (isValidShare) {
             redisCommands.push(['hincrbyfloat', coin + ':shares:roundCurrent', shareData.worker, shareData.difficulty]);
-            redisCommands.push(['hincrby', coin + ':stats', 'validShares', 1]);
+            redisCommands.push(['hincrby', coin + ':stats', 'validShares', 1]);            
+            if (shareData.pbass_subscribe === true) {
+                redisCommands.push(['hincrbyfloat', coin + ':shares:pbaasCurrent', shareData.worker, shareData.difficulty]);
+            }
+
         } else {
             redisCommands.push(['hincrby', coin + ':stats', 'invalidShares', 1]);
         }
@@ -85,16 +89,15 @@ module.exports = function(logger, poolConfig){
         redisCommands.push(['zadd', coin + ':hashrate', dateNow / 1000 | 0, hashrateData.join(':')]);
 
         if (isValidBlock){
+            if (shareData.pbass_subscribe === true) {
+                redisCommands.push(['sadd', coin + ':pbaasPending', [shareData.blockHash, shareData.worker, dateNow].join(':')]);
+            }
+
             if (!shareData.blockOnlyPBaaS) {        
                 redisCommands.push(['rename', coin + ':shares:roundCurrent', coin + ':shares:round' + shareData.height]);
                 redisCommands.push(['rename', coin + ':shares:timesCurrent', coin + ':shares:times' + shareData.height]);
                 redisCommands.push(['sadd', coin + ':blocksPending', [shareData.blockHash, shareData.txHash, shareData.height, shareData.worker, dateNow].join(':')]);
                 redisCommands.push(['hincrby', coin + ':stats', 'validBlocks', 1]);
-            } else {
-                // TODO, copy pbaas shares for current round ...    
-                //redisCommands.push(['rename', coin + ':shares:roundCurrent', coin + ':shares:round' + shareData.height]);
-                //redisCommands.push(['rename', coin + ':shares:timesCurrent', coin + ':shares:times' + shareData.height]);
-                redisCommands.push(['sadd', coin + ':pbaasPending', [shareData.blockHash, shareData.worker, dateNow].join(':')]);
             }
         }
         else if (shareData.blockHash){
