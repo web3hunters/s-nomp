@@ -72,11 +72,7 @@ module.exports = function(logger, poolConfig){
 
         if (isValidShare) {
             redisCommands.push(['hincrbyfloat', coin + ':shares:roundCurrent', shareData.worker, shareData.difficulty]);
-            redisCommands.push(['hincrby', coin + ':stats', 'validShares', 1]);            
-            if (shareData.pbass_subscribe === true) {
-                redisCommands.push(['hincrbyfloat', coin + ':shares:pbaasCurrent', shareData.worker, shareData.difficulty]);
-            }
-
+            redisCommands.push(['hincrby', coin + ':stats', 'validShares', 1]);
         } else {
             redisCommands.push(['hincrby', coin + ':stats', 'invalidShares', 1]);
         }
@@ -89,10 +85,9 @@ module.exports = function(logger, poolConfig){
         redisCommands.push(['zadd', coin + ':hashrate', dateNow / 1000 | 0, hashrateData.join(':')]);
 
         if (isValidBlock){
-            if (shareData.pbass_subscribe === true) {
-                redisCommands.push(['sadd', coin + ':pbaasPending', [shareData.blockHash, shareData.worker, dateNow].join(':')]);
-            }
-
+            // track potential pbaas blocks ( need lookup and processing )
+            redisCommands.push(['sadd', coin + ':pbaasPending', [shareData.blockHash, shareData.worker, dateNow].join(':')]);
+            // track main chain blocks
             if (!shareData.blockOnlyPBaaS) {        
                 redisCommands.push(['rename', coin + ':shares:roundCurrent', coin + ':shares:round' + shareData.height]);
                 redisCommands.push(['rename', coin + ':shares:timesCurrent', coin + ':shares:times' + shareData.height]);
