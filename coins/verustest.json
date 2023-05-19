@@ -5,7 +5,7 @@
     "sapling": 120,
     "txfee": 0.0005,
     "requireShielding": true,
-    "burnFees": true,
+    "burnFees": false,
 
     "explorer": {
         "txURL": "https://explorer.veruscoin.io/tx/",
