@@ -40,7 +40,16 @@
     .boxLowerHeader{
         font-size: 1.3em;
         margin: 0 0 5px 10px;
+		width: 175px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
     }
+	
+	.boxLowerHeader:hover {
+		overflow: visible;
+	}
+
 
     #boxStatsLeft{
         color: black;

@@ -173,6 +173,7 @@ function updateWorkerStats() {
 		$("#statsBalance"+htmlSafeWorkerName).text(statData.workers[w].balance);
 		$("#statsShares"+htmlSafeWorkerName).text(Math.round(statData.workers[w].currRoundShares * 100) / 100);
 		$("#statsDiff"+htmlSafeWorkerName).text(statData.workers[w].diff);
+		$("#statsLastShare"+htmlSafeWorkerName).text(Math.floor(((new Date().getTime()) - (new Date(Math.round(statData.workers[w].lastShare)).getTime())) / 1000));
 	}
 }
 function addWorkerToDisplay(name, htmlSafeName, workerObj) {
@@ -190,6 +191,7 @@ function addWorkerToDisplay(name, htmlSafeName, workerObj) {
 	htmlToAdd+='<div><i class="fa fa-gavel"></i> <small>Luck <span id="statsLuckDays'+htmlSafeName+'">'+workerObj.luckDays+'</span> Days</small></div>';
 	htmlToAdd+='<div><i class="fa fa-money"></i> <small>Bal: <span id="statsBalance'+htmlSafeName+'">'+workerObj.balance+'</span></small></div>';
 	htmlToAdd+='<div><i class="fa fa-money"></i> <small>Paid: <span id="statsPaid'+htmlSafeName+'">'+workerObj.paid+'</span></small></div>';
+	htmlToAdd+='<div><i class="fa fa-signal"></i> <small>Last share: <span id="statsLastShare'+htmlSafeName+'">'+(Math.floor(((new Date().getTime()) - (new Date(Math.round(workerObj.lastShare)).getTime())) / 1000))+'s ago</span></small></div>';
 	htmlToAdd+='</div></div></div>';
 	$("#boxesWorkers").html($("#boxesWorkers").html()+htmlToAdd);
 }
