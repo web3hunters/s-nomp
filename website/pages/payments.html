@@ -74,7 +74,8 @@
                         {{=it.stats.pools[pool].payments[p].blocks}}
                     {{ } }}
                 </td>
-                <td>{{=readableDate(it.stats.pools[pool].payments[p].time)}}</td>
+                <!--<td>{{=readableDate(it.stats.pools[pool].payments[p].time)}}</td>-->
+                <td><span style="padding-left: 18px;"><date id="{{=it.stats.pools[pool].payments[p].blocks}}"></date></span><script>document.getElementById("{{=it.stats.pools[pool].payments[p].blocks}}").innerHTML = new Intl.DateTimeFormat(undefined, { dateStyle: 'full', timeStyle: 'long' }).format({{=it.stats.pools[pool].payments[p].time}});</script></td>
                 <td>{{=it.stats.pools[pool].payments[p].miners}}</td>
                 <td>{{=Math.round(it.stats.pools[pool].payments[p].shares)}}</td>
                 <td>{{=it.stats.pools[pool].payments[p].paid}} {{=it.stats.pools[pool].symbol}}</td>
