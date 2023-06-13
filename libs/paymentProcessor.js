@@ -8,6 +8,8 @@ var Stratum = require('stratum-pool');
 var util = require('stratum-pool/lib/util.js');
 var CreateRedisClient = require('./createRedisClient.js');
 
+let badBlocks = {}
+
 module.exports = function(logger){
 
     var poolConfigs = JSON.parse(process.env.pools);
@@ -742,38 +744,58 @@ function SetupForPool(logger, poolOptions, setupFinished){
                         // update confirmations for round
                         if (tx && tx.result)
                             round.confirmations = parseInt((tx.result.confirmations || 0));
-                        
+
                         // look for transaction errors
+                        // NOTE: We should combine these two if blocks into one since the only difference is in the logged message.
                         if (tx.error && tx.error.code === -5){
-                            logger.warning(logSystem, logComponent, 'Daemon reports invalid transaction: ' + round.txHash);
-                            round.category = 'kicked';
+                            if (undefined == badBlocks[round.txHash]) {
+                                badBlocks[round.txHash] = 0
+                            }
+
+                            if (badBlocks[round.txHash] >= 15) {
+                                logger.warning(logSystem, logComponent, 'ERROR: Daemon reports invalid transaction: ' + round.txHash)
+                                delete badBlocks[round.txHash]
+                                round.category = 'kicked'
+                            } else {
+                                badBlocks[round.txHash]++
+                                logger.warning(logSystem, logComponent, `Abandoned block ${round.txHash} check ${badBlocks[round.txHash]}/15`)
+                            }
                             return;
                         }
                         else if (!tx.result.details || (tx.result.details && tx.result.details.length === 0)){
-                            logger.warning(logSystem, logComponent, 'Daemon reports no details for transaction: ' + round.txHash);
-                            round.category = 'kicked';
+                            if (undefined == badBlocks[round.txHash]) {
+                                badBlocks[round.txHash] = 0
+                            }
+                            if (badBlocks[round.txHash] >= 15) {
+                                logger.warning(logSystem, logComponent, 'ERROR: Daemon reports no details for transaction: ' + round.txHash)
+                                delete badBlocks[round.txHash]
+                                round.category = 'kicked'
+                            } else {
+                                badBlocks[round.txHash]++
+                                logger.warning(logSystem, logComponent, `Abandoned block ${round.txHash} check ${badBlocks[round.txHash]}/15`)
+                            }
                             return;
                         }
-                        else if (tx.error || !tx.result){
-                            logger.error(logSystem, logComponent, 'Odd error with gettransaction ' + round.txHash + ' ' + JSON.stringify(tx));
-                            return;
-                        }
+
                         // get the coin base generation tx
-                        var generationTx = tx.result.details.filter(function(tx){
-                            return tx.address === poolOptions.address;
-                        })[0];
-                        if (!generationTx && tx.result.details.length === 1){
-                            generationTx = tx.result.details[0];
+                        const generationTx = tx.result.details.filter(tx => tx.address === poolOptions.address)[0]
+                        if (!generationTx && tx.result.details.length === 1) {
+                            generationTx = tx.result.details[0]
                         }
                         if (!generationTx){
-                            logger.error(logSystem, logComponent, 'Missing output details to pool address for transaction ' + round.txHash);
-                            return;
+                            return logger.error(logSystem, logComponent, `ERROR: Missing output details to pool address for transaction ${round.txHash}`)
                         }
                         // get transaction category for round
-                        round.category = generationTx.category;
+                        round.category = generationTx.category
                         // get reward for newly generated blocks
                         if (round.category === 'generate' || round.category === 'immature') {
                             round.reward = coinsRound(parseFloat(generationTx.amount || generationTx.value));
+                        }
+
+                        // Clear blocks that previously triggered an attempted kick.
+                        if (!round.txHash in badBlocks) {
+                            logger.error(logSystem, logComponent, `${round.txHash} is no longer bad!`)
+                            delete badBlocks[round.txHash]
                         }
                     });
 
