@@ -290,8 +290,9 @@ var spawnPoolWorkers = function(){
                         
                         var redisCommands = [];
                         
-                        // if its been less than 15 minutes since last share was submitted
-                        var timeChangeSec = roundTo(Math.max(now - lastShareTime, 0) / 1000, 4);
+                        // if its been less than 15 minutes since last share was submitted by any stratum
+                        var lastShareTimeUnified = Math.max(redisCommands.push(['hget', msg.coin + ':lastSeen', workerAddress]), lastShareTime);
+                        var timeChangeSec = roundTo(Math.max(now - lastShareTimeUnified, 0) / 1000, 4);
                         //var timeChangeTotal = roundTo(Math.max(now - lastStartTime, 0) / 1000, 4);
                         if (timeChangeSec < 900) {
                             // loyal miner keeps mining :)
