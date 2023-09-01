@@ -26,7 +26,7 @@ module.exports = function(logger, poolConfig){
     var logSystem = 'Pool';
     var logComponent = coin;
     var logSubCat = 'Thread ' + (parseInt(forkId) + 1);
-    
+
     var connection = CreateRedisClient(redisConfig);
     if (redisConfig.password) {
         connection.auth(redisConfig.password);
@@ -74,6 +74,7 @@ module.exports = function(logger, poolConfig){
             redisCommands.push(['hincrbyfloat', coin + ':shares:pbaasCurrent', shareData.worker, shareData.difficulty]);
             redisCommands.push(['hincrbyfloat', coin + ':shares:roundCurrent', shareData.worker, shareData.difficulty]);
             redisCommands.push(['hincrby', coin + ':stats', 'validShares', 1]);
+            redisCommands.push(['hset', coin + ':lastSeen', shareData.worker, dateNow]);
         } else {
             redisCommands.push(['hincrby', coin + ':stats', 'invalidShares', 1]);
         }
