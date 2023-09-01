@@ -48,7 +48,7 @@
         "node-watch": "^0.5.8",
         "nonce": "^1.0.4",
         "pm2": "^3.2.2",
-        "redis": "^2.8.0",
+        "redis": "^3.0.0",
         "request": "^2.88.0",
         "stratum-pool": "git+https://github.com/VerusCoin/node-stratum-pool.git"
     },
