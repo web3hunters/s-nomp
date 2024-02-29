@@ -1439,11 +1439,15 @@ function SetupForPool(logger, poolOptions, setupFinished){
 
 
     var getProperAddress = function(address){
-        if (address.length >= 40){
-            logger.warning(logSystem, logComponent, 'Invalid address '+address+', convert to address '+(poolOptions.invalidAddress || poolOptions.address));
-            return (poolOptions.invalidAddress || poolOptions.address);
+        // Validation of Public and Identity addresses
+        var isvalid = WAValidator.validate(String(address).split(".")[0], 'VRSC');
+        if(isvalid !== true){
+/*
+            // Validation of sapling addreses (disabled until paymentProcessor.js can handle sapling payments)
+            var isvalid = WAValidator.validate(String(address).split(".")[0], 'VRSC', 'sapling');
         }
-        if (address.length <= 30) {
+        if (isvalid !== true){
+*/
             logger.warning(logSystem, logComponent, 'Invalid address '+address+', convert to address '+(poolOptions.invalidAddress || poolOptions.address));
             return (poolOptions.invalidAddress || poolOptions.address);
         }
