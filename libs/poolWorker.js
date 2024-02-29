@@ -5,6 +5,7 @@ var net     = require('net');
 var MposCompatibility = require('./mposCompatibility.js');
 var ShareProcessor = require('./shareProcessor.js');
 var CreateRedisClient = require('./createRedisClient.js');
+var WAValidator = require('wallet-address-validator');
 
 module.exports = function(logger){
 
@@ -137,19 +138,15 @@ module.exports = function(logger){
                 if (poolOptions.validateWorkerUsername !== true)
                     authCallback(true);
                 else {
-                        pool.daemon.cmd('validateaddress', [String(workerName).split(".")[0]], function (results) {
-                            var isValid = results.filter(function (r) {
-                                if (r.response)
-                                {
-                                    return r.response.isvalid;
-                                }
-                                else
-                                {
-                                    return false;
-                                }
-                            }).length > 0;
-                            authCallback(isValid);
-                        });
+                        //Validation of Public and Identity addresses
+                        var isvalid = WAValidator.validate(String(workerName).split(".")[0], 'VRSC');
+/*
+                        //Validation of sapling addreses (disabled until paymentProcessor.js can handle sapling payments)
+                        if(isvalid !== true){
+                            var isvalid = WAValidator.validate(String(address).split(".")[0], 'VRSC', 'sapling');
+                        }
+*/
+                        authCallback(isvalid);
                     }
             };
 
