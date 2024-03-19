@@ -98,7 +98,10 @@ done
 ## copy shares
 for j in $ACTIVE_CHAINS
 do
-  $REDIS_CLI hset $(echo $j | $TR '[:upper:]' '[:lower:]'):shares:roundCurrent $SHARELIST 1>/dev/null
+  if [[ "$(echo $j | $TR '[:upper:]' '[:lower:]')" != "$(echo $MAIN_CHAIN | $TR '[:upper:]' '[:lower:]')" ]]
+  then
+    $REDIS_CLI hset $(echo $j | $TR '[:upper:]' '[:lower:]'):shares:roundCurrent $SHARELIST 1>/dev/null
+  fi
 done
 
 ## Check each hash on all chains
@@ -114,12 +117,15 @@ do
       BLOCK=$(echo "$CHECK" | $JQ  '.height')
       echo "$j contains blockhash $(echo $i | cut -d':' -f1), TXID: $TRANSACTION"
       REDIS_NEW_PENDING="${i:0:65}"$TRANSACTION:$BLOCK:"${i:65}"
-      $REDIS_CLI sadd $(echo $j | $TR '[:upper:]' '[:lower:]'):blocksPending $REDIS_NEW_PENDING 1>/dev/null
-      ## if no shares are known for this round yet, add them
-      SHARES_AVAILABLE="$($REDIS_CLI hgetall $(echo $j | tr '[:upper:]' '[:lower:]'):shares:round$BLOCK)"
-      if [[ "$SHARES_AVAILABLE" == "" ]]
+      if [[ "$(echo $j | $TR '[:upper:]' '[:lower:]')" != "$(echo $MAIN_CHAIN | $TR '[:upper:]' '[:lower:]')" ]]
       then
-        $REDIS_CLI hset $(echo $j | tr '[:upper:]' '[:lower:]'):shares:round$BLOCK $SHARELIST 1>/dev/null
+        $REDIS_CLI sadd $(echo $j | $TR '[:upper:]' '[:lower:]'):blocksPending $REDIS_NEW_PENDING 1>/dev/null
+        ## if no shares are known for this round yet, add them
+        SHARES_AVAILABLE="$($REDIS_CLI hgetall $(echo $j | tr '[:upper:]' '[:lower:]'):shares:round$BLOCK)"
+        if [[ "$SHARES_AVAILABLE" == "" ]]
+        then
+          $REDIS_CLI hset $(echo $j | tr '[:upper:]' '[:lower:]'):shares:round$BLOCK $SHARELIST 1>/dev/null
+        fi
       fi
     fi
   done
