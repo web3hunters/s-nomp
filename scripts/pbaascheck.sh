@@ -9,6 +9,8 @@
 VERUS=/home/verus/bin/verus      # complete path to (and including) the verus RPC client
 MAIN_CHAIN=VRSC                  # main hashing chain
 REDIS_NAME=verus                 # name you assigned the coin in `/home/pool/s-nomp/coins/*.json`
+REDIS_HOST=127.0.0.1             # If you run this script on another system, alter the IP address of your Redis server
+REDIS_PORT=6379                  # If you use a different REDIS port, alter the port accordingly
 
 ## Set script folder
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
@@ -58,9 +60,9 @@ if ! command -v redis-cli &>/dev/null ; then
        echo "Both redis-cli or keydb-cli not found. Please install one using your package manager."
        exit 1
     fi
-    REDIS_CLI=$(which keydb-cli)
+    REDIS_CLI="$(which keydb-cli) -h $REDIS_HOST -p $REDIS_PORT"
 else
-    REDIS_CLI=$(which redis-cli)
+    REDIS_CLI="$(which redis-cli) -h $REDIS_HOST -p $REDIS_PORT"
 fi
 
 ## Is main chain active?
