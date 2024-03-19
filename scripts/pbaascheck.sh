@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-## © verus.io 2018-2023, released under MIT license
+## © verus.io 2018-2024, released under MIT license
 ## Script written in 2023 by Oink.vrsc@
 ## Script maintained by Oink.vrsc@
 
