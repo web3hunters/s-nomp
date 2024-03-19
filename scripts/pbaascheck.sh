@@ -65,6 +65,13 @@ else
     REDIS_CLI="$(which redis-cli) -h $REDIS_HOST -p $REDIS_PORT"
 fi
 
+## Can we connect to Redis?
+if [[ "$($REDIS_CLI ping)" != "PONG" ]]
+then
+  echo "cannot connect to redis server"
+  exit 1
+fi
+
 ## Is main chain active?
 count=$(${VERUS} -chain=$MAIN_CHAIN getconnectioncount 2>/dev/null)
 case $count in
