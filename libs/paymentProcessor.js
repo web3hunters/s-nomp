@@ -7,6 +7,7 @@ var async = require('async');
 var Stratum = require('stratum-pool');
 var util = require('stratum-pool/lib/util.js');
 var CreateRedisClient = require('./createRedisClient.js');
+var WAValidator = require('wallet-address-validator');
 
 let badBlocks = {}
 
