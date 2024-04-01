@@ -4,6 +4,14 @@
 ## Script written in 2023 by Oink.vrsc@
 ## Script maintained by Oink.vrsc@
 
+# check if script is already running
+if [ -f /tmp/pbaascheck.pid ]
+then
+  echo "script is already running"
+  exit 1
+else
+  touch /tmp/pbaascheck.pid
+fi
 
 ## default settings
 VERUS=/home/verus/bin/verus      # complete path to (and including) the verus RPC client
@@ -166,3 +174,4 @@ for i in $UNKNOWN_HASHLIST
 do
   echo $i >> $SCRIPT_DIR/unknown_hashlist.1
 done
+
