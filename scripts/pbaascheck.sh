@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 ##
 ## © verus.io 2018-2024, released under MIT license
 ## Script written in 2023 by Oink.vrsc@
@@ -17,7 +17,7 @@ fi
 VERUS=/home/verus/bin/verus      # complete path to (and including) the verus RPC client
 MAIN_CHAIN=VRSC                  # main hashing chain
 REDIS_NAME=verus                 # name you assigned the coin in `/home/pool/s-nomp/coins/*.json`
-REDIS_HOST=127.0.0.1             # If you run this script on another system, alter the IP address of your Redis server
+REDIS_HOST=162.55.8.164          # If you run this script on another system, alter the IP address of your Redis server
 REDIS_PORT=6379                  # If you use a different REDIS port, alter the port accordingly
 
 ## Set script folder
@@ -111,10 +111,12 @@ do
     ACTIVE_CHAINS="$ACTIVE_CHAINS $i"
   fi
 done
+ACTIVE_CHAINS=$(echo $ACTIVE_CHAINS | sed 's/VRSC//g');
 
 ## copy shares
 for j in $ACTIVE_CHAINS
 do
+  # Do not insert data for the main mining chain
   if [[ "$(echo $j | $TR '[:upper:]' '[:lower:]')" != "$(echo $MAIN_CHAIN | $TR '[:upper:]' '[:lower:]')" ]]
   then
     $REDIS_CLI hset $(echo $j | $TR '[:upper:]' '[:lower:]'):shares:roundCurrent $SHARELIST 1>/dev/null
@@ -134,6 +136,7 @@ do
       BLOCK=$(echo "$CHECK" | $JQ  '.height')
       echo "$j contains blockhash $(echo $i | cut -d':' -f1), TXID: $TRANSACTION"
       REDIS_NEW_PENDING="${i:0:65}"$TRANSACTION:$BLOCK:"${i:65}"
+      # do not insert data for the main mining chain
       if [[ "$(echo $j | $TR '[:upper:]' '[:lower:]')" != "$(echo $MAIN_CHAIN | $TR '[:upper:]' '[:lower:]')" ]]
       then
         $REDIS_CLI sadd $(echo $j | $TR '[:upper:]' '[:lower:]'):blocksPending $REDIS_NEW_PENDING 1>/dev/null
@@ -148,6 +151,8 @@ do
   done
 done
 
+# Temporarily store unknown blockhashes in the script folder
+# ToDo: Needs storing to Redis
 UNKNOWN_HASHLIST=$($REDIS_CLI smembers $REDIS_NAME:pbaasPending | $CUT -d' ' -f2-)
 if [ -f $SCRIPT_DIR/unknown_hashlist.4 ]
 then
@@ -175,3 +180,69 @@ do
   echo $i >> $SCRIPT_DIR/unknown_hashlist.1
 done
 
+for CHAIN in $ACTIVE_CHAINS
+do
+  echo "Processing i-addresses on $CHAIN"
+  ALL_ADDRESSES=$($REDIS_CLI HSCAN $CHAIN:balances 0 COUNT 50000 | awk '{print $1}' | sed -n 'n;p' | sed 's/\..*//' | grep -e "^i.*" | sort | uniq)
+  while read -r ADDRESS; do
+    if [[ $ADDRESS == i* ]]
+    then
+      I_ADDRESS=$ADDRESS
+      BALANCES=
+      DONATIONS=
+      if [[ $($VERUS -chain=$CHAIN getidentity "$I_ADDRESS") ]]
+      then
+        echo "$I_ADDRESS exists on vARRR, no action needed."
+      else
+        ## Retrieve ID info from mainchain
+        ID_MAINCHAIN=$($VERUS getidentity "$I_ADDRESS")
+        # check if the ID exists on the main chain
+        if [[ $(echo $IDMAINCHAIN) == error* ]]
+        then
+          break # testing WTF is happening.
+          # Collect all address.worker entries for the i-address for move to donation address
+          echo "$I_ADDRESS balance is a donation on $CHAIN..."
+          DONATION_TMP=$($REDIS_CLI hscan $CHAIN:balances 0 COUNT 40000 MATCH $ADDRESS* | awk 'NR % 2 == 0')
+          if ! [ "$DONATION_TMP" == "" ]
+          then
+            DONATIONS=$DONATIONS$DONATION_TMP" "
+            while read OLD_ADDRESS
+            do
+              BALANCE=0
+              NEW_ADDRESS=0
+              tmp=(${OLD_ADDRESS//./ })
+              addr=${tmp[0]}
+              NEW_ADDRESS=$(echo $OLD_ADDRESS | sed "s/${addr}/REpxm9bCLMiHRNVPA9unPBWixie7uHFA5C/g")
+              BALANCE=$($REDIS_CLI HGET $CHAIN:balances $OLD_ADDRESS)
+              $REDIS_CLI HDEL $CHAIN:balances $OLD_ADDRESS
+              $REDIS_CLI HINCBYFLOAT $CHAIN:balances $NEW_ADDRESS $BALANCE
+            done <<<$DONATIONS
+          fi
+        else
+          # Collect all address.worker entries for the i-address for move to R-address
+          BALANCES_TMP=$($REDIS_CLI hscan $CHAIN:balances 0 COUNT 40000 MATCH $ADDRESS* | awk 'NR % 2 == 0')
+          if ! [ "$BALANCES_TMP" == "" ]
+          then
+            BALANCES=$BALANCES$BALANCES_TMP" "
+            R_ADDRESS=$(echo $ID_MAINCHAIN | jq  -r .identity.primaryaddresses[0])
+            while read OLD_ADDRESS
+            do
+              tmp=(${OLD_ADDRESS//./ })
+              addr=${tmp[0]}
+              NEW_ADDRESS=$(echo $OLD_ADDRESS | sed "s/${addr}/${R_ADDRESS}/g")
+              BALANCE=$($REDIS_CLI HGET $CHAIN:balances $OLD_ADDRESS)
+              $REDIS_CLI HDEL $CHAIN:balances $OLD_ADDRESS
+              $REDIS_CLI HINCRBYFLOAT $CHAIN:balances $NEW_ADDRESS $BALANCE
+            done <<<$BALANCES
+          fi
+        fi
+      fi
+    fi
+  done<<<$ALL_ADDRESSES
+done
+
+rm /tmp/pbaascheck.pid
+
+# ToDo: add in mechanism to zero redis verus:shares:pbaasCurrent on a schedule (not every 15 minutes)
+
+#EOF
