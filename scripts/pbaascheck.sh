@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 ##
 ## © verus.io 2018-2024, released under MIT license
 ## Script written in 2023 by Oink.vrsc@
@@ -182,8 +182,10 @@ done
 
 for CHAIN in $ACTIVE_CHAINS
 do
-  echo "Processing i-addresses on $CHAIN"
-  ALL_ADDRESSES=$($REDIS_CLI HSCAN $CHAIN:balances 0 COUNT 50000 | awk '{print $1}' | sed -n 'n;p' | sed 's/\..*//' | grep -e "^i.*" | sort | uniq)
+  CHAINlc=$(echo $(echo $CHAIN | $TR '[:upper:]' '[:lower:]'))
+  INVALIDADDRESS=$(cat /home/pool/pool-payments/pool_configs/$CHAINlc.json | jq -r .invalidAddress)
+  echo "Processing i-addresses on $CHAIN. $INVALIDADDRESS used for nonexisting IDs"
+  ALL_ADDRESSES=$($REDIS_CLI HSCAN $CHAINlc:balances 0 COUNT 50000 | awk '{print $1}' | sed -n 'n;p' | sed 's/\..*//' | grep -e "^i.*" | sort | uniq)
   while read -r ADDRESS; do
     if [[ $ADDRESS == i* ]]
     then
@@ -202,7 +204,7 @@ do
           break # testing WTF is happening.
           # Collect all address.worker entries for the i-address for move to donation address
           echo "$I_ADDRESS balance is a donation on $CHAIN..."
-          DONATION_TMP=$($REDIS_CLI hscan $CHAIN:balances 0 COUNT 40000 MATCH $ADDRESS* | awk 'NR % 2 == 0')
+          DONATION_TMP=$($REDIS_CLI hscan $CHAINlc:balances 0 COUNT 40000 MATCH $ADDRESS* | awk 'NR % 2 == 0')
           if ! [ "$DONATION_TMP" == "" ]
           then
             DONATIONS=$DONATIONS$DONATION_TMP" "
@@ -212,15 +214,15 @@ do
               NEW_ADDRESS=0
               tmp=(${OLD_ADDRESS//./ })
               addr=${tmp[0]}
-              NEW_ADDRESS=$(echo $OLD_ADDRESS | sed "s/${addr}/REpxm9bCLMiHRNVPA9unPBWixie7uHFA5C/g")
-              BALANCE=$($REDIS_CLI HGET $CHAIN:balances $OLD_ADDRESS)
-              $REDIS_CLI HDEL $CHAIN:balances $OLD_ADDRESS
-              $REDIS_CLI HINCBYFLOAT $CHAIN:balances $NEW_ADDRESS $BALANCE
+              NEW_ADDRESS=$(echo $OLD_ADDRESS | sed "s/${addr}/${INVALIDADDRESS}/g")
+              BALANCE=$($REDIS_CLI HGET $CHAINlc:balances $OLD_ADDRESS)
+              $REDIS_CLI HDEL $CHAINlc:balances $OLD_ADDRESS
+              $REDIS_CLI HINCBYFLOAT $CHAINlc:balances $NEW_ADDRESS $BALANCE
             done <<<$DONATIONS
           fi
         else
           # Collect all address.worker entries for the i-address for move to R-address
-          BALANCES_TMP=$($REDIS_CLI hscan $CHAIN:balances 0 COUNT 40000 MATCH $ADDRESS* | awk 'NR % 2 == 0')
+          BALANCES_TMP=$($REDIS_CLI hscan $CHAINlc:balances 0 COUNT 40000 MATCH $ADDRESS* | awk 'NR % 2 == 0')
           if ! [ "$BALANCES_TMP" == "" ]
           then
             BALANCES=$BALANCES$BALANCES_TMP" "
@@ -230,9 +232,9 @@ do
               tmp=(${OLD_ADDRESS//./ })
               addr=${tmp[0]}
               NEW_ADDRESS=$(echo $OLD_ADDRESS | sed "s/${addr}/${R_ADDRESS}/g")
-              BALANCE=$($REDIS_CLI HGET $CHAIN:balances $OLD_ADDRESS)
-              $REDIS_CLI HDEL $CHAIN:balances $OLD_ADDRESS
-              $REDIS_CLI HINCRBYFLOAT $CHAIN:balances $NEW_ADDRESS $BALANCE
+              BALANCE=$($REDIS_CLI HGET $CHAINlc:balances $OLD_ADDRESS)
+              $REDIS_CLI HDEL $CHAINlc:balances $OLD_ADDRESS
+              $REDIS_CLI HINCRBYFLOAT $CHAINlc:balances $NEW_ADDRESS $BALANCE
             done <<<$BALANCES
           fi
         fi
