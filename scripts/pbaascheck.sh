@@ -17,8 +17,9 @@ fi
 VERUS=/home/verus/bin/verus      # complete path to (and including) the verus RPC client
 MAIN_CHAIN=VRSC                  # main hashing chain
 REDIS_NAME=verus                 # name you assigned the coin in `/home/pool/s-nomp/coins/*.json`
-REDIS_HOST=162.55.8.164          # If you run this script on another system, alter the IP address of your Redis server
+REDIS_HOST=127.0.0.1             # If you run this script on another system, alter the IP address of your Redis server
 REDIS_PORT=6379                  # If you use a different REDIS port, alter the port accordingly
+REDIS_PASS=examplepass           # if your Redis database requires a password, set it here
 
 ## Set script folder
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
@@ -40,7 +41,14 @@ else
 fi
 
 
-## Dependencies: jq, tr, cut, redis-cli/keydb-cli
+## Dependencies: bc, jq, tr, cut, redis-cli/keydb-cli
+## bc
+if ! command -v bc &>/dev/null ; then
+    echo "jq not found. please install using your package manager."
+    exit 1
+else
+    BC=$(which bc)
+fi
 ## jq
 if ! command -v jq &>/dev/null ; then
     echo "jq not found. please install using your package manager."
@@ -68,9 +76,9 @@ if ! command -v redis-cli &>/dev/null ; then
        echo "Both redis-cli or keydb-cli not found. Please install one using your package manager."
        exit 1
     fi
-    REDIS_CLI="$(which keydb-cli) -h $REDIS_HOST -p $REDIS_PORT"
+    REDIS_CLI="$(which keydb-cli) -h $REDIS_HOST -p $REDIS_PORT -a $REDIS_PASS"
 else
-    REDIS_CLI="$(which redis-cli) -h $REDIS_HOST -p $REDIS_PORT"
+    REDIS_CLI="$(which redis-cli) -h $REDIS_HOST -p $REDIS_PORT -a $REDIS_PASS"
 fi
 
 ## Can we connect to Redis?
@@ -243,8 +251,28 @@ do
   done<<<$ALL_ADDRESSES
 done
 
-rm /tmp/pbaascheck.pid
+WORKERSHAREREDUCTION=
+## Retrieve data from REDIS
+WORKERSHARES=$($REDIS_CLI HGETALL $REDIS_NAME:shares:pbaasCurrent)
 
-# ToDo: add in mechanism to zero redis verus:shares:pbaasCurrent on a schedule (not every 15 minutes)
+## if the value of shares is below two, remove the key from the database, otherwise substract 50% of the value
+for LINE in $WORKERSHARES
+do
+  if [[ "$LINE" =~ ^[0-9] ]]
+  then
+    if [[ "$LINE" < "2.00000000" ]]
+    then
+      $REDIS_CLI HDEL $REDIS_NAME:shares:pbaasCurrent "$WORKERSHAREREDUCTION"
+    else
+      REDUCTION=$(echo "scale=8;$LINE / 2" | $BC)
+      $REDIS_CLI HINCRBYFLOAT $REDIS_NAME:shares:pbaasCurrent "$WORKERSHAREREDUCTION" "-$REDUCTION"
+    fi
+    WORKERSHAREREDUCTION=
+  else
+    WORKERSHAREREDUCTION=$LINE
+  fi
+done <<<$WORKERSHARES
+
+rm /tmp/pbaascheck.pid
 
 #EOF
