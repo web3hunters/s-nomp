@@ -13,7 +13,8 @@ else
   touch /tmp/pbaascheck.pid
 fi
 
-## default settings
+## default settings (change where needed)
+PAYMENT=/home/pool/payment       # Change if you used a different location
 VERUS=/home/verus/bin/verus      # complete path to (and including) the verus RPC client
 MAIN_CHAIN=VRSC                  # main hashing chain
 REDIS_NAME=verus                 # name you assigned the coin in `/home/pool/s-nomp/coins/*.json`
@@ -190,7 +191,7 @@ done
 for CHAIN in $ACTIVE_CHAINS
 do
   CHAINlc=$(echo $(echo $CHAIN | $TR '[:upper:]' '[:lower:]'))
-  INVALIDADDRESS=$(cat /home/pool/pool-payments/pool_configs/$CHAINlc.json | jq -r .invalidAddress)
+  INVALIDADDRESS=$(cat $PAYMENT/pool_configs/$CHAINlc.json | jq -r .invalidAddress)
   echo "Processing i-addresses on $CHAIN. $INVALIDADDRESS used for nonexisting IDs"
   ALL_ADDRESSES=$($REDIS_CLI HSCAN $CHAINlc:balances 0 COUNT 50000 | awk '{print $1}' | sed -n 'n;p' | sed 's/\..*//' | grep -e "^i.*" | sort | uniq)
   while read -r ADDRESS; do
