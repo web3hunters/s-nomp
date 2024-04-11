@@ -329,7 +329,7 @@ module.exports = function(logger, portalConfig, poolConfigs){
                                 workers[workerName] = (workers[workerName] || {});
                             } else {
                                 pendingAmount = parseFloat(pends[1][b]);
-                                workers[workerName].immature = coinsRound(pendingAmount);
+                                workers[workerName].immature = coinsRound(satoshisToCoins(pendingAmount));
                                 totalImmature += pendingAmount;
                             }
                         }
