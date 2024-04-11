@@ -244,7 +244,7 @@ module.exports = function(logger, portalConfig, poolConfigs){
 		async.each(_this.stats.pools, function(pool, pcb) {
             pindex++;
 			var coin = String(_this.stats.pools[pool.name].name);
-			client.hscan(coin + ':shares:roundCurrent', 0, "match", a+"*", "count", 1000, function(error, result) {
+			client.hscan(coin + ':shares:roundCurrent', 0, "match", a+"*", "count", 50000, function(error, result) {
                 if (error) {
                     pcb(error);
                     return;
@@ -290,11 +290,11 @@ module.exports = function(logger, portalConfig, poolConfigs){
 		async.each(_this.stats.pools, function(pool, pcb) {
 			var coin = String(_this.stats.pools[pool.name].name);
 			// get all immature balances from address
-			client.hscan(coin + ':immature', 0, "match", a+"*", "count", 10000, function(error, pends) {
+			client.hscan(coin + ':immature', 0, "match", a+"*", "count", 50000, function(error, pends) {
                 // get all balances from address
-                client.hscan(coin + ':balances', 0, "match", a+"*", "count", 10000, function(error, bals) {
+                client.hscan(coin + ':balances', 0, "match", a+"*", "count", 50000, function(error, bals) {
                     // get all payouts from address
-                    client.hscan(coin + ':payouts', 0, "match", a+"*", "count", 10000, function(error, pays) {
+                    client.hscan(coin + ':payouts', 0, "match", a+"*", "count", 50000, function(error, pays) {
                         
                         var workerName = "";
                         var balAmount = 0;
