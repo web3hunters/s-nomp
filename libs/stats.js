@@ -277,32 +277,32 @@ module.exports = function(logger, portalConfig, poolConfigs){
 
     this.getBalanceByAddress = function(address, cback){
 
-	    var a = address.split(".")[0];
-		
+            var a = address.split(".")[0];
+
         var client = redisClients[0].client,
             coins = redisClients[0].coins,
             balances = [];
-		
-		var totalHeld = parseFloat(0);
-		var totalPaid = parseFloat(0);
+
+                var totalHeld = parseFloat(0);
+                var totalPaid = parseFloat(0);
         var totalImmature = parseFloat(0);
-				
-		async.each(_this.stats.pools, function(pool, pcb) {
-			var coin = String(_this.stats.pools[pool.name].name);
-			// get all immature balances from address
-			client.hscan(coin + ':immature', 0, "match", a+"*", "count", 50000, function(error, pends) {
+
+                async.each(_this.stats.pools, function(pool, pcb) {
+                        var coin = String(_this.stats.pools[pool.name].name);
+                        // get all immature balances from address
+                        client.hscan(coin + ':immature', 0, "match", a+"*", "count", 50000, function(error, pends) {
                 // get all balances from address
                 client.hscan(coin + ':balances', 0, "match", a+"*", "count", 50000, function(error, bals) {
                     // get all payouts from address
                     client.hscan(coin + ':payouts', 0, "match", a+"*", "count", 50000, function(error, pays) {
-                        
+
                         var workerName = "";
                         var balAmount = 0;
                         var paidAmount = 0;
                         var pendingAmount = 0;
-                        
+
                         var workers = {};
-                        
+
                         for (var i in pays[1]) {
                             if (Math.abs(i % 2) != 1) {
                                 workerName = String(pays[1][i]);
@@ -333,7 +333,7 @@ module.exports = function(logger, portalConfig, poolConfigs){
                                 totalImmature += pendingAmount;
                             }
                         }
-                        
+
                         for (var w in workers) {
                             balances.push({
                                 worker:String(w),
@@ -342,23 +342,23 @@ module.exports = function(logger, portalConfig, poolConfigs){
                                 immature:workers[w].immature
                             });
                         }
-                        
+
                         pcb();
                     });
                 });
             });
-		}, function(err) {
-			if (err) {
-				callback("There was an error getting balances");
-				return;
-			}
-			
-			_this.stats.balances = balances;
-			_this.stats.address = address;
+                }, function(err) {
+                        if (err) {
+                                callback("There was an error getting balances");
+                                return;
+                        }
 
-			cback({totalHeld:coinsRound(totalHeld), totalPaid:coinsRound(totalPaid), totalImmature:satoshisToCoins(totalImmature), balances});
-		});
-	};
+                        _this.stats.balances = balances;
+                        _this.stats.address = address;
+
+                        cback({totalHeld:coinsRound(totalHeld), totalPaid:coinsRound(totalPaid), totalImmature:satoshisToCoins(totalImmature), balances});
+                });
+        };
 
     this.getPoolBalancesByAddress = function(address, callback){
         var a = address.split(".")[0];
@@ -372,11 +372,11 @@ module.exports = function(logger, portalConfig, poolConfigs){
             var coin = String(poolName);
             
             // get all immature balances from address
-            client.hscan(coin + ':immature', 0, "match", a + "*", "count", 10000, function(error, pends) {
+            client.hscan(coin + ':immature', 0, "match", a + "*", "count", 50000, function(error, pends) {
                 // get all balances from address
-                client.hscan(coin + ':balances', 0, "match", a + "*", "count", 10000, function(error, bals) {
+                client.hscan(coin + ':balances', 0, "match", a + "*", "count", 50000, function(error, bals) {
                     // get all payouts from address
-                    client.hscan(coin + ':payouts', 0, "match", a + "*", "count", 10000, function(error, pays) {
+                    client.hscan(coin + ':payouts', 0, "match", a + "*", "count", 50000, function(error, pays) {
                         
                         var workers = {};
                         
