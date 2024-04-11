@@ -35,7 +35,7 @@
         "paymentMode": "prop",
         "_comment_paymentMode":"prop, pplnt",
 		"pplnt": 51,
-        "_comment_pplnt": "If pplnt is active and clients have mined less that this part, their shares are slashed."
+        "_comment_pplnt": "If pplnt is active and clients have mined less that this part, their shares are slashed.",
         "paymentInterval": 120,
         "_comment_paymentInterval": "Interval in seconds to check and perform payments.",
         "minimumPayment": 1,
