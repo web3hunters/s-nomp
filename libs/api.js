@@ -23,7 +23,57 @@ module.exports = function(logger, portalConfig, poolConfigs){
                 res.end(JSON.stringify(portalStats.statPoolHistory));
                 return;
             case 'blocks':
-            case 'getblocksstats':
+			case 'worker_balances':
+				res.header('Content-Type', 'application/json');
+				if (req.url.indexOf("?") > 0) {
+					var url_parms = req.url.split("?");
+					if (url_parms.length > 0) {
+						var address = url_parms[1] || null;
+						if (address != null && address.length > 0) {
+							address = address.split(".")[0];
+							//portalStats.getPoolBalancesByAddress(address, function(balances) {
+							//	res.end(JSON.stringify(balances));
+							//});
+							portalStats.getPoolBalancesByAddress(address, function(balances) {
+								var formattedBalances = {};
+			
+								balances.forEach(function (balance) {
+									if (!formattedBalances[balance.pool]) {
+										formattedBalances[balance.pool] = {
+											name: balance.pool,
+											totalPaid: 0,
+											totalBalance: 0,
+											totalImmature: 0,
+											workers: []
+										};
+									}
+			
+									formattedBalances[balance.pool].totalPaid += balance.paid;
+									formattedBalances[balance.pool].totalBalance += balance.balance;
+									formattedBalances[balance.pool].totalImmature += balance.immature;
+			
+									formattedBalances[balance.pool].workers.push({
+										name: balance.worker,
+										balance: balance.balance,
+										paid: balance.paid,
+										immature: balance.immature
+									});
+								});
+			
+								var finalBalances = Object.values(formattedBalances);
+								res.end(JSON.stringify(finalBalances));
+                			});
+						} else {
+							res.end(JSON.stringify({ result: "error", message: "Invalid wallet address" }));
+						}
+					} else {
+						res.end(JSON.stringify({ result: "error", message: "Invalid URL parameters" }));
+					}
+				} else {
+					res.end(JSON.stringify({ result: "error", message: "URL parameters not found" }));
+				}
+				return;
+				case 'getblocksstats':
                 portalStats.getBlocks(function(data){
                     res.header('Content-Type', 'application/json');
                     res.end(JSON.stringify(data));                                        

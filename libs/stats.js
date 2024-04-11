@@ -360,6 +360,78 @@ module.exports = function(logger, portalConfig, poolConfigs){
 		});
 	};
 
+    this.getPoolBalancesByAddress = function(address, callback){
+        var a = address.split(".")[0];
+        
+        var client = redisClients[0].client,
+            coins = redisClients[0].coins,
+            poolBalances = [];
+        
+        async.each(_this.stats.pools, function(pool, pcb) {
+            var poolName = pool.name;
+            var coin = String(poolName);
+            
+            // get all immature balances from address
+            client.hscan(coin + ':immature', 0, "match", a + "*", "count", 10000, function(error, pends) {
+                // get all balances from address
+                client.hscan(coin + ':balances', 0, "match", a + "*", "count", 10000, function(error, bals) {
+                    // get all payouts from address
+                    client.hscan(coin + ':payouts', 0, "match", a + "*", "count", 10000, function(error, pays) {
+                        
+                        var workers = {};
+                        
+                        // Process payouts
+                        for (var i = 0; i < pays[1].length; i += 2) {
+                            var workerName = String(pays[1][i]);
+                            var paidAmount = parseFloat(pays[1][i + 1]);
+                            
+                            workers[workerName] = workers[workerName] || {};
+                            workers[workerName].paid = coinsRound(paidAmount);
+                        }
+                        
+                        // Process balances
+                        for (var j = 0; j < bals[1].length; j += 2) {
+                            var workerName = String(bals[1][j]);
+                            var balAmount = parseFloat(bals[1][j + 1]);
+                            
+                            workers[workerName] = workers[workerName] || {};
+                            workers[workerName].balance = coinsRound(balAmount);
+                        }
+                        
+                        // Process immature balances
+                        for (var k = 0; k < pends[1].length; k += 2) {
+                            var workerName = String(pends[1][k]);
+                            var pendingAmount = parseFloat(pends[1][k + 1]);
+                            
+                            workers[workerName] = workers[workerName] || {};
+                            workers[workerName].immature = coinsRound(pendingAmount);
+                        }
+                        
+                        // Push balances for each worker to the poolBalances array
+                        for (var worker in workers) {
+                            poolBalances.push({
+                                pool: poolName,
+                                worker: worker,
+                                balance: workers[worker].balance || 0,
+                                paid: workers[worker].paid || 0,
+                                immature: workers[worker].immature || 0
+                            });
+                        }
+                        
+                        pcb();
+                    });
+                });
+            });
+        }, function(err) {
+            if (err) {
+                callback("There was an error getting balances");
+                return;
+            }
+            
+            callback(poolBalances);
+        });
+    };
+
     this.getGlobalStats = function(callback){
 
         var statGatherTime = Date.now() / 1000 | 0;
