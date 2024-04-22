@@ -66,6 +66,7 @@
     </tr>
     </thead>
         {{ for(var p in it.stats.pools[pool].payments) { }}
+            <h2>{{=it.stats.pools[pool].symbol}} payments</h2>
             <tr>
                 <td>
                     {{ if (it.poolsConfigs[pool].coin.explorer && it.poolsConfigs[pool].coin.explorer.txURL) { }}
