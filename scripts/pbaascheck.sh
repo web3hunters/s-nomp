@@ -111,7 +111,7 @@ fi
 ## Return a list of found PBaaS hashes:
 HASHLIST=$($REDIS_CLI smembers $REDIS_NAME:pbaasPending | $CUT -d' ' -f2-)
 ## return a list on found shares per miner
-SHARELIST=$($REDIS_CLI hgetall $REDIS_NAME:shares:roundCurrent| $CUT -d' ' -f2-)
+SHARELIST=$($REDIS_CLI hgetall $REDIS_NAME:shares:pbaasCurrent| $CUT -d' ' -f2-)
 ## get list of active chains in ecosystem
 PBAAS_CHAINS=$($VERUS -chain=$MAIN_CHAIN listcurrencies '{"systemtype":"pbaas"}' | jq --arg MAIN_CHAIN "${MAIN_CHAIN}" -r '.[].currencydefinition | select (.name != "$MAIN_CHAIN") | .name')
 ## determine chains active on this system
@@ -128,16 +128,6 @@ do
   fi
 done
 ACTIVE_CHAINS=$(echo $ACTIVE_CHAINS | sed 's/VRSC//g');
-
-## copy shares
-for j in $ACTIVE_CHAINS
-do
-  # Do not insert data for the main mining chain
-  if [[ "$(echo $j | $TR '[:upper:]' '[:lower:]')" != "$(echo $MAIN_CHAIN | $TR '[:upper:]' '[:lower:]')" ]]
-  then
-    $REDIS_CLI hset $(echo $j | $TR '[:upper:]' '[:lower:]'):shares:roundCurrent $SHARELIST 1>/dev/null
-  fi
-done
 
 ## Check each hash on all chains
 for i in $HASHLIST
