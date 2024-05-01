@@ -10,7 +10,7 @@ then
   PID_TIME=$(stat -c '%W' /tmp/pbaascheck.pid)
   CUR_TIME=$(date +%s)
   PID_AGE=$(echo "$CUR_TIME - $PID_TIME" | bc)
-  if [[ $PID_AGE <= 3600 ]]
+  if [[ $PID_AGE -le 3600 ]]
   then
     echo "script is already running"
     exit 1
